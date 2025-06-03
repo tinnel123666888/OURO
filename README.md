@@ -51,7 +51,9 @@ The dataset for generating captions and VQA pairs, as described in the paper, ha
 
 If you wish to generate the dataset on your own, you can follow the procedure outlined below after performing multi-level RPN generation and using **Qwen2-VL** for inference. After generating the RPNs and using Qwen2-VL to perform inference, the following steps are used to generate captions and VQA pairs:
 
-1. **Merge Hierarchical Captions**: After generating captions for different hierarchical levels, these captions are merged by matching key terms between parent and child captions. This ensures a coherent and comprehensive description that spans all levels.#### 1. **Prepare Your Data Folder Structure and JSON File**
+1. **Merge Hierarchical Captions**: After generating captions for different hierarchical levels, these captions are merged by matching key terms between parent and child captions. This ensures a coherent and comprehensive description that spans all levels.
+   
+#### 1. **Prepare Your Data Folder Structure and JSON File**
 
 To enable hierarchical caption merging, **organize your dataset as follows**:
 
