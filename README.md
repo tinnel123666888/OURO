@@ -20,10 +20,10 @@ The multi-level RPN generation script requires **Detectron2**. Follow the instru
 
 Here’s a quick installation guide:
 
-1. Clone the Detectron2 repository:
+1. Clone the Our repository:
     ```bash
-    git clone https://github.com/facebookresearch/detectron2.git
-    cd detectron2
+    git clone https://github.com/tinnel123666888/OURO.git
+    cd detectron2-main
     ```
 
 2. Install dependencies:
