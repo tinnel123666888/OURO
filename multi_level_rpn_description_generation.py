@@ -3,9 +3,9 @@ import cv2
 import numpy as np
 import json
 import argparse
-from detectron2.engine import DefaultPredictor
-from detectron2.config import get_cfg
-from detectron2 import model_zoo
+from detectron2-main.detectron2.engine import DefaultPredictor
+from detectron2-main.detectron2.config import get_cfg
+from detectron2-main.detectron2 import model_zoo
 import easyocr  # 替换 PaddleOCR
 
 def setup_predictor():
