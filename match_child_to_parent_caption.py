@@ -17,10 +17,62 @@ def find_deepest_level(image_hierarchy):
     """Find the deepest level of paths in the hierarchy."""
     return max(len(path.split("/")) for path in image_hierarchy)
 
+def sentence_similarity(sentences1, sentence2):
+    """Calculate similarity between a sentence and a list of sentences using TF-IDF and cosine similarity."""
+    vectorizer = TfidfVectorizer().fit(sentences1 + [sentence2])
+    tfidf_matrix = vectorizer.transform(sentences1 + [sentence2])
+    similarity_matrix = cosine_similarity(tfidf_matrix[:-1], tfidf_matrix[-1:])  # Compute similarity with each sentence
+    return similarity_matrix
+
+def merge_child_descriptions_to_parent(parent, children, image_descriptions):
+    """Merge child descriptions to parent description based on similarity."""
+    parent_text = image_descriptions[parent]
+    parent_sentences = parent_text.split(". ")  # Split parent description into sentences
+
+    # Collect descriptions for all child images
+    child_texts = [image_descriptions[child] for child in children if child in image_descriptions]
+    
+    if not child_texts:
+        return parent_text  # Return original parent if no children
+
+    # For each child description, match it to parent sentences
+    for child_text in child_texts:
+        similarity_matrix = sentence_similarity(parent_sentences, child_text)  # Compute similarity
+
+        # If similarity is above the threshold, replace the parent sentence
+        for i, parent_sentence in enumerate(parent_sentences):
+            if similarity_matrix[0][i] > 0.2:  # Compare similarity with each parent sentence
+                parent_sentences[i] = child_text  # Replace with child description
+                break
+        else:
+            # If no match is found, append the child description to the parent
+            parent_sentences.append(child_text)
+
+    # Join the updated sentences back into a full description
+    return ". ".join(parent_sentences)
+
+def process_node_and_descendants(image_hierarchy, image_descriptions, parent_path):
+    """Recursively merge child descriptions into parent description and process all layers."""
+    # Process the current level (parent node)
+    if parent_path not in image_descriptions:
+        return  # Skip if no description exists for the parent
+
+    children = image_hierarchy[parent_path]
+    if not children:
+        return  # Skip if no children exist
+
+    # Merge all child descriptions into the parent description
+    merged_description = merge_child_descriptions_to_parent(parent_path, children, image_descriptions)
+    image_descriptions[parent_path] = merged_description
+
+    # Recursively process all children (if they have their own children)
+    for child in children:
+        process_node_and_descendants(image_hierarchy, image_descriptions, child)
+
 def main():
     # Parse command line arguments
     args = parse_args()
-    
+
     # Load the input JSON file
     with open(args.input_file, "r", encoding="utf-8") as f:
         data = json.load(f)  # Read the JSON data
@@ -38,42 +90,10 @@ def main():
                 image_hierarchy[parent_path].append(image_path)
                 image_descriptions[image_path] = img["answer"]
 
-    # Find the deepest level in the hierarchy
-    max_depth = find_deepest_level(image_hierarchy)
-
-    # Traverse and match child captions to parent captions starting from the deepest level
-    for depth in range(max_depth, 1, -1):  # Iterate from the deepest level to level 1
-        for parent, children in image_hierarchy.items():
-            if len(parent.split("/")) == depth:  # Process only the current level
-                # Get descriptions for all child images
-                child_texts = [image_descriptions[child] for child in children if child in image_descriptions]
-                parent_texts = [image_descriptions[parent]] if parent in image_descriptions else []
-
-                if not child_texts:
-                    continue  # Skip if no child descriptions are available
-                
-                # Use TF-IDF and cosine similarity to match child captions with parent caption
-                if parent_texts:
-                    vectorizer = TfidfVectorizer().fit(child_texts + parent_texts)
-                    tfidf_matrix = vectorizer.transform(child_texts + parent_texts)
-                    similarity_matrix = cosine_similarity(tfidf_matrix[:-1], tfidf_matrix[-1])  # Compute similarity
-
-                    # Select the child description with the highest similarity
-                    best_match_index = similarity_matrix.argmax()
-                    best_match_text = child_texts[best_match_index]
-
-                    # If similarity is below the threshold, concatenate all child descriptions
-                    if similarity_matrix[best_match_index][0] < args.similarity_threshold:
-                        best_match_text = " ".join(child_texts)
-
-                    # Append the best matching child caption to the parent caption
-                    if parent in image_descriptions:
-                        image_descriptions[parent] += " " + best_match_text
-                    else:
-                        image_descriptions[parent] = best_match_text
-                else:
-                    # If parent has no description, merge all child descriptions
-                    image_descriptions[parent] = " ".join(child_texts)
+    # Process all nodes starting from the topmost parent
+    root_nodes = [node for node in image_hierarchy if len(node.split("/")) == 1]
+    for root in root_nodes:
+        process_node_and_descendants(image_hierarchy, image_descriptions, root)
 
     # Update the JSON data with new captions
     for image_group in data:
