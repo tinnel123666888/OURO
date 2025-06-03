@@ -39,16 +39,47 @@ Here’s a quick installation guide:
 
 Once you have Detectron2 set up, you can run the multi-level RPN generation code. If you want to generate your own dataset, you can follow the datasets mentioned in the [Monkey repository](https://github.com/Yuliang-Liu/Monkey) to create a multi-level RPN dataset.
 
-4. **Run the multi-level RPN generation script**:
+4. Run the multi-level RPN generation script:
    To generate multi-level RPN and associated descriptions, run the following command:
 
    ```bash
    python multi_level_rpn_description_generation.py --base_image_dir <path_to_input_images> --base_output_dir <path_to_output_directory> --cuda_device <cuda_device_id>
 
 ### 2. Caption and VQA Generation (TBD)
+
 The dataset for generating captions and VQA pairs, as described in the paper, has already been generated. However, due to the large size of the dataset, we are in the process of compressing it for easier handling. Once the dataset is compressed, it will be uploaded to Hugging Face for public access.
 
-If you wish to generate the dataset on your own, you can follow the procedure outlined in Step 1 for multi-level RPN generation and use Qwen2-VL to perform inference and generate the captions and VQA pairs.
+If you wish to generate the dataset on your own, you can follow the procedure outlined below after performing multi-level RPN generation and using **Qwen2-VL** for inference. After generating the RPNs and using Qwen2-VL to perform inference, the following steps are used to generate captions and VQA pairs:
+
+1. **Merge Hierarchical Captions**: After generating captions for different hierarchical levels, these captions are merged by matching key terms between parent and child captions. This ensures a coherent and comprehensive description that spans all levels.
+
+2. **Generate VQA Pairs**: Based on the merged caption, five VQA pairs are created. The prompt used to generate these pairs is as follows:
+    ```
+    Generate five questions and corresponding answers based on the provided caption, covering these aspects: Objects, Relationship, Style, Scene, and Details.
+    ```
+
+### How to Generate Captions and VQA Pairs:
+
+1. **Run the Multi-Level RPN Generation and Qwen2-VL Inference**:
+    After setting up your environment and generating multi-level RPNs, run the following command to generate captions:
+
+    ```bash
+    python match_child_to_parent_caption.py --input_file /path/to/your_json.json --output_file /path/to/matched_json.json --similarity_threshold 0.2
+    ```
+
+    - **`--input_file`**: Path to the input JSON file containing the image paths and descriptions.
+    - **`--output_file`**: Path to save the output JSON file with merged captions.
+    - **`--similarity_threshold`**: A threshold to control how child captions are matched to parent captions based on cosine similarity (default is `0.2`).
+
+2. **Post-Processing**:
+    After merging the hierarchical captions, the next step involves generating VQA pairs based on the merged captions. You will generate questions and answers for each caption covering the following aspects:
+    - **Objects**: Questions about the individual objects in the scene.
+    - **Relationship**: Questions about how objects interact or relate.
+    - **Style**: Questions about the style or attributes of objects or the scene.
+    - **Scene**: Questions about the overall scene depicted in the image.
+    - **Details**: Questions focused on finer details or specific features in the image.
+
+These VQA pairs can then be used for further analysis or model training.
 
 ### 3. Web Demo (Coming Soon)
 A web-based demo showcasing OURO's capabilities is currently under development. Stay tuned for updates on its availability.
