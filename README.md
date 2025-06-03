@@ -60,18 +60,99 @@ If you wish to generate the dataset on your own, you can follow the procedure ou
 
 ### How to Generate Captions and VQA Pairs:
 
-1. **Run the Multi-Level RPN Generation and Qwen2-VL Inference**:
-    After setting up your environment and generating multi-level RPNs, run the following command to generate captions:
 
-    ```bash
-    python match_child_to_parent_caption.py --input_file /path/to/your_json.json --output_file /path/to/matched_json.json --similarity_threshold 0.2
-    ```
+---
 
-    - **`--input_file`**: Path to the input JSON file containing the image paths and descriptions.
-    - **`--output_file`**: Path to save the output JSON file with merged captions.
-    - **`--similarity_threshold`**: A threshold to control how child captions are matched to parent captions based on cosine similarity (default is `0.2`).
+### 1. **Prepare Your Data Folder Structure and JSON File**
 
-2. **Post-Processing**:
+To enable hierarchical caption merging, **organize your dataset as follows**:
+
+* Place your images in a nested folder structure that reflects the hierarchy you want to capture.
+  For example:
+
+  ```
+  /your_dataset_root/
+      root/
+          root_img.jpg
+          child1/
+              child1_img.jpg
+              grandchild1/
+                  grandchild1_img.jpg
+          child2/
+              child2_img.jpg
+              grandchild2/
+                  grandchild2_img.jpg
+  ```
+
+* After running multi-level RPN and Qwen2-VL inference, save the resulting captions for each image in a JSON file (`your_json.json`) with the following structure:
+
+  ```json
+  [
+    [
+      [
+        {
+          "image_path": "/your_dataset_root/root/root_img.jpg",
+          "answer": "The root scene is broad and quiet."
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "image_path": "/your_dataset_root/root/child1/child1_img.jpg",
+          "answer": "Child1 shows a green field in the scene."
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "image_path": "/your_dataset_root/root/child1/grandchild1/grandchild1_img.jpg",
+          "answer": "Grandchild1 describes a tree standing in the green field."
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "image_path": "/your_dataset_root/root/child2/child2_img.jpg",
+          "answer": "Child2 reveals a river passing by."
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "image_path": "/your_dataset_root/root/child2/grandchild2/grandchild2_img.jpg",
+          "answer": "Grandchild2 shows a boat floating on the river."
+        }
+      ]
+    ]
+  ]
+  ```
+
+* **Key requirements:**
+
+  * Each image entry must contain its absolute path (`image_path`) and caption (`answer`).
+  * The directory structure in `image_path` must match your on-disk folder hierarchy to correctly infer parent-child relationships.
+
+---
+
+### 2. **Run the Multi-Level Caption Merging Script**
+
+After preparing your JSON file, merge all hierarchical captions with:
+
+```bash
+python match_child_to_parent_caption.py --input_file /path/to/your_json.json --output_file /path/to/matched_json.json --similarity_threshold 0.2
+```
+
+* **`--input_file`**: Path to the input JSON file containing image paths and captions.
+* **`--output_file`**: Path to save the output JSON file with the final, recursively merged captions (the result will contain the root image and the merged description).
+* **`--similarity_threshold`**: Cosine similarity threshold for caption replacement/merging (default is `0.2`).
+
+
+
+3. **Post-Processing**:
     After merging the hierarchical captions, the next step involves generating VQA pairs based on the merged captions. You will generate questions and answers for each caption covering the following aspects:
     - **Objects**: Questions about the individual objects in the scene.
     - **Relationship**: Questions about how objects interact or relate.
