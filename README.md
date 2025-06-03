@@ -53,7 +53,7 @@ If you wish to generate the dataset on your own, you can follow the procedure ou
 
 1. **Merge Hierarchical Captions**: After generating captions for different hierarchical levels, these captions are merged by matching key terms between parent and child captions. This ensures a coherent and comprehensive description that spans all levels.
    
-#### 1. **Prepare Your Data Folder Structure and JSON File**
+**Prepare Your Data Folder Structure and JSON File**
 
 To enable hierarchical caption merging, **organize your dataset as follows**:
 
@@ -127,7 +127,7 @@ To enable hierarchical caption merging, **organize your dataset as follows**:
   * The directory structure in `image_path` must match your on-disk folder hierarchy to correctly infer parent-child relationships.
 
 
-#### 2. **Run the Multi-Level Caption Merging Script**
+**Run the Multi-Level Caption Merging Script**
 
 After preparing your JSON file, merge all hierarchical captions with:
 
