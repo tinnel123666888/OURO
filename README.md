@@ -63,7 +63,7 @@ If you wish to generate the dataset on your own, you can follow the procedure ou
 
 ---
 
-### 1. **Prepare Your Data Folder Structure and JSON File**
+#### 1. **Prepare Your Data Folder Structure and JSON File**
 
 To enable hierarchical caption merging, **organize your dataset as follows**:
 
@@ -138,7 +138,7 @@ To enable hierarchical caption merging, **organize your dataset as follows**:
 
 ---
 
-### 2. **Run the Multi-Level Caption Merging Script**
+#### 2. **Run the Multi-Level Caption Merging Script**
 
 After preparing your JSON file, merge all hierarchical captions with:
 
@@ -152,7 +152,7 @@ python match_child_to_parent_caption.py --input_file /path/to/your_json.json --o
 
 
 
-3. **Post-Processing**:
+####3. **Post-Processing**:
     After merging the hierarchical captions, the next step involves generating VQA pairs based on the merged captions. You will generate questions and answers for each caption covering the following aspects:
     - **Objects**: Questions about the individual objects in the scene.
     - **Relationship**: Questions about how objects interact or relate.
