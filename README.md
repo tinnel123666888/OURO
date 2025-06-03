@@ -152,7 +152,7 @@ python match_child_to_parent_caption.py --input_file /path/to/your_json.json --o
 
 
 
-####3. **Post-Processing**:
+#### 3. **Post-Processing**:
     After merging the hierarchical captions, the next step involves generating VQA pairs based on the merged captions. You will generate questions and answers for each caption covering the following aspects:
     - **Objects**: Questions about the individual objects in the scene.
     - **Relationship**: Questions about how objects interact or relate.
