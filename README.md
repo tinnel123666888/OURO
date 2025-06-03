@@ -124,7 +124,6 @@ To enable hierarchical caption merging, **organize your dataset as follows**:
   * Each image entry must contain its absolute path (`image_path`) and caption (`answer`).
   * The directory structure in `image_path` must match your on-disk folder hierarchy to correctly infer parent-child relationships.
 
----
 
 #### 2. **Run the Multi-Level Caption Merging Script**
 
