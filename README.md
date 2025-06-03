@@ -51,19 +51,7 @@ The dataset for generating captions and VQA pairs, as described in the paper, ha
 
 If you wish to generate the dataset on your own, you can follow the procedure outlined below after performing multi-level RPN generation and using **Qwen2-VL** for inference. After generating the RPNs and using Qwen2-VL to perform inference, the following steps are used to generate captions and VQA pairs:
 
-1. **Merge Hierarchical Captions**: After generating captions for different hierarchical levels, these captions are merged by matching key terms between parent and child captions. This ensures a coherent and comprehensive description that spans all levels.
-
-2. **Generate VQA Pairs**: Based on the merged caption, five VQA pairs are created. The prompt used to generate these pairs is as follows:
-    ```
-    Generate five questions and corresponding answers based on the provided caption, covering these aspects: Objects, Relationship, Style, Scene, and Details.
-    ```
-
-### How to Generate Captions and VQA Pairs:
-
-
----
-
-#### 1. **Prepare Your Data Folder Structure and JSON File**
+1. **Merge Hierarchical Captions**: After generating captions for different hierarchical levels, these captions are merged by matching key terms between parent and child captions. This ensures a coherent and comprehensive description that spans all levels.#### 1. **Prepare Your Data Folder Structure and JSON File**
 
 To enable hierarchical caption merging, **organize your dataset as follows**:
 
@@ -151,16 +139,17 @@ python match_child_to_parent_caption.py --input_file /path/to/your_json.json --o
 * **`--similarity_threshold`**: Cosine similarity threshold for caption replacement/merging (default is `0.2`).
 
 
+2. **Generate VQA Pairs**: Based on the merged caption, five VQA pairs are created. The prompt used to generate these pairs is as follows:
+    ```
+    Generate five questions and corresponding answers based on the provided caption, covering these aspects: Objects, Relationship, Style, Scene, and Details.
+    ```
 
-#### 3. **Post-Processing**:
-    After merging the hierarchical captions, the next step involves generating VQA pairs based on the merged captions. You will generate questions and answers for each caption covering the following aspects:
-    - **Objects**: Questions about the individual objects in the scene.
-    - **Relationship**: Questions about how objects interact or relate.
-    - **Style**: Questions about the style or attributes of objects or the scene.
-    - **Scene**: Questions about the overall scene depicted in the image.
-    - **Details**: Questions focused on finer details or specific features in the image.
 
-These VQA pairs can then be used for further analysis or model training.
+
+---
+
+
+
 
 ### 3. Web Demo (Coming Soon)
 A web-based demo showcasing OURO's capabilities is currently under development. Stay tuned for updates on its availability.
