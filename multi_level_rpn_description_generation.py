@@ -6,7 +6,7 @@ import argparse
 from detectron2.engine import DefaultPredictor
 from detectron2.config import get_cfg
 from detectron2 import model_zoo
-import easyocr  # Replacing PaddleOCR
+import easyocr 
 
 def setup_predictor(use_cuda, confidence_threshold):
     cfg = get_cfg()
