@@ -62,16 +62,29 @@ To enable hierarchical caption merging, **organize your dataset as follows**:
 
   ```
   /your_dataset_root/
-      root/
-          root_img.jpg
-          child1/
-              child1_img.jpg
-              grandchild1/
-                  grandchild1_img.jpg
-          child2/
-              child2_img.jpg
-              grandchild2/
-                  grandchild2_img.jpg
+    root_image1/
+        data.json
+        root_img.jpg
+        child1/
+            child1_img.jpg
+            grandchild1/
+                grandchild1_img.jpg
+        child2/
+            child2_img.jpg
+            grandchild2/
+                grandchild2_img.jpg
+    root_image2/
+        data.json
+        root_img.jpg
+        child1/
+            child1_img.jpg
+            grandchild1/
+                grandchild1_img.jpg
+        child2/
+            child2_img.jpg
+            grandchild2/
+                grandchild2_img.jpg
+
   ```
 
 * After running multi-level RPN and Qwen2-VL inference, save the resulting captions for each image in a JSON file (`your_json.json`) with the following structure:
@@ -132,10 +145,14 @@ To enable hierarchical caption merging, **organize your dataset as follows**:
 After preparing your JSON file, merge all hierarchical captions with:
 
 ```bash
-python match_child_to_parent_caption.py --input_file /path/to/your_json.json --output_file /path/to/matched_json.json --similarity_threshold 0.2
+python recursive_merge_caption.py \
+    --dataset_root /path/to/your_dataset_root \
+    --output_file /path/to/output_merged.json \
+    --similarity_threshold 0.2
+
 ```
 
-* **`--input_file`**: Path to the input JSON file containing image paths and captions.
+* **`--dataset_root`**: The path to the root folder that contains all root directories (e.g., /your_dataset_root).
 * **`--output_file`**: Path to save the output JSON file with the final, recursively merged captions (the result will contain the root image and the merged description).
 * **`--similarity_threshold`**: Cosine similarity threshold for caption replacement/merging (default is `0.2`).
 
