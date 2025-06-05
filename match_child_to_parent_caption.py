@@ -6,8 +6,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Process multiple root directories with their own data.json files.")
-    parser.add_argument('--root_dirs', type=str, required=True, help="Comma-separated list of root directories to process")
+    parser = argparse.ArgumentParser(description="Process all root directories under a given dataset root.")
+    parser.add_argument('--dataset_root', type=str, required=True, help="Path to the root directory containing all root directories (e.g., /your_dataset_root/)")
     parser.add_argument('--output_file', type=str, required=True, help="Output JSON file path to save merged captions")
     parser.add_argument('--similarity_threshold', type=float, default=0.2, help="Cosine similarity threshold")
     return parser.parse_args()
@@ -91,29 +91,32 @@ def recursive_merge_dir(node_map, curr_dir, threshold, depth=0):
 
 def main():
     args = parse_args()
-    root_dirs = args.root_dirs.split(',')  # List of root directories to process
     output = []
 
-    for root_dir in root_dirs:
-        # Load JSON data for the current root directory
-        data_file = os.path.join(root_dir, 'data.json')
-        with open(data_file, "r", encoding="utf-8") as f:
-            data = json.load(f)
+    # 1. Automatically traverse all root directories under dataset_root
+    for root_dir in os.listdir(args.dataset_root):
+        root_path = os.path.join(args.dataset_root, root_dir)
+        if os.path.isdir(root_path):
+            data_file = os.path.join(root_path, 'data.json')
+            if os.path.exists(data_file):
+                print(f"Processing root directory: {root_path}")
+                with open(data_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                
+                # 2. Build tree structure for this root directory
+                node_map, _ = build_tree(data)
+                
+                # 3. Recursively merge descriptions for this root directory
+                merged_desc = recursive_merge_dir(node_map, root_path, args.similarity_threshold)
+                root_img = node_map[root_path]['img']
+                
+                # 4. Add the result to output
+                output.append({
+                    "root_image_path": root_img,
+                    "final_description": merged_desc
+                })
 
-        # Build the directory tree for the current root directory
-        node_map, root = build_tree(data)
-        
-        # Recursively merge descriptions
-        merged_desc = recursive_merge_dir(node_map, root, args.similarity_threshold)
-        root_img = node_map[root]['img']
-
-        # Add the merged result to output
-        output.append({
-            "root_image_path": root_img,
-            "final_description": merged_desc
-        })
-    
-    # Save the merged descriptions for all root directories to the output file
+    # 5. Save the merged descriptions to the output file
     with open(args.output_file, "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2, ensure_ascii=False)
 
