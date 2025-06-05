@@ -46,10 +46,19 @@ Once you have Detectron2 set up, you can run the multi-level RPN generation code
    python process_images.py \
     --base_image_dir /path/to/your/images \
     --base_output_dir /path/to/output/images \
-    --cuda_device 0 \
+    --use_cuda \
     --message_file /path/to/save/messages.json \
     --confidence_threshold 0.35
 
+--base_image_dir: Path to the root directory containing all images.
+
+--base_output_dir: Directory to save the processed output images.
+
+--use_cuda: Enable CUDA for GPU processing (optional).
+
+--message_file: Path where the messages.json will be saved.
+
+--confidence_threshold: Confidence threshold for RPN object detection (default is 0.35).
 
 ### 2. Caption and VQA Generation (TBD)
 
