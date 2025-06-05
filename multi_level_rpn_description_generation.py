@@ -3,21 +3,21 @@ import cv2
 import numpy as np
 import json
 import argparse
-from detectron2-main.detectron2.engine import DefaultPredictor
-from detectron2-main.detectron2.config import get_cfg
-from detectron2-main.detectron2 import model_zoo
-import easyocr  # 替换 PaddleOCR
+from detectron2.engine import DefaultPredictor
+from detectron2.config import get_cfg
+from detectron2 import model_zoo
+import easyocr  
 
-def setup_predictor():
+def setup_predictor(confidence_threshold):
     cfg = get_cfg()
     cfg.merge_from_file(model_zoo.get_config_file("COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml"))
     cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml")
-    cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.35
+    cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = confidence_threshold  # Confidence threshold passed as argument
     cfg.MODEL.DEVICE = "cuda"
     return DefaultPredictor(cfg)
 
 def setup_ocr():
-    reader = easyocr.Reader(['ch_sim', 'en'])  # 适用于中文和英文
+    reader = easyocr.Reader(['ch_sim', 'en'])  # Supports Chinese and English
     return reader
 
 def load_image(image_path):
@@ -47,7 +47,7 @@ def is_contained(box, larger_box):
 def generate_text_proposals(image, ocr, max_size=2048):
     h, w = image.shape[:2]
 
-    # 如果图像过大，缩小以防止 OpenCV warpPerspective 失败
+    # If the image is too large, resize to prevent OpenCV warpPerspective failure
     if max(h, w) > max_size:
         scale_factor = max_size / max(h, w)
         image_resized = cv2.resize(image, (int(w * scale_factor), int(h * scale_factor)))
@@ -58,11 +58,11 @@ def generate_text_proposals(image, ocr, max_size=2048):
 
     boxes = []
     for detection in result:
-        bbox = detection[0]  # EasyOCR 返回的 bbox 是四边形
+        bbox = detection[0]  # EasyOCR returns bbox as quadrilateral
         x_min, y_min = np.min(bbox, axis=0)
         x_max, y_max = np.max(bbox, axis=0)
 
-        # 需要将坐标映射回原图尺寸
+        # Mapping coordinates back to the original image size
         if max(h, w) > max_size:
             x_min, y_min, x_max, y_max = (
                 int(x_min / scale_factor),
@@ -77,7 +77,7 @@ def generate_text_proposals(image, ocr, max_size=2048):
 
 def filter_boxes(boxes, level):
     if level >= 3:
-        return boxes  # 第三层保留所有框
+        return boxes  # Keep all boxes for the third level
     
     filtered_boxes = []
     for i, box in enumerate(boxes):
@@ -92,25 +92,26 @@ def process_image_recursive(image, output_dir, ocr, predictor, level=1, max_leve
     os.makedirs(output_dir, exist_ok=True)
     
     rpn_proposals  = generate_proposals(image, predictor)
-    if level==1:
+    if level == 1:
         text_proposals = generate_text_proposals(image, ocr)
-    else:text_proposals=np.array([])
+    else:
+        text_proposals = np.array([])
 
-    rpn_proposals  = filter_boxes(rpn_proposals, level)  # 过滤前两层的被包含框
+    rpn_proposals  = filter_boxes(rpn_proposals, level)  # Filter contained boxes for the first two levels
 
-    # **修正布尔值判断**
-    if rpn_proposals.size == 0 and text_proposals.size == 0 and level==1:
-        print(f"⚠️ {output_dir} 没有检测到 RPN 或 OCR 区域，跳过")
-        return  # 跳过该图片，防止后续出错
+    # **Fix boolean check**
+    if rpn_proposals.size == 0 and text_proposals.size == 0 and level == 1:
+        print(f"⚠️ {output_dir} did not detect RPN or OCR regions, skipping")
+        return  # Skip image to avoid errors later
 
-    if rpn_proposals.size == 0:  # RPN 为空，则使用文本检测框
+    if rpn_proposals.size == 0:  # If RPN is empty, use text proposals
         proposals = text_proposals
-    elif text_proposals.size == 0:  # 文本检测框为空，则使用 RPN 框
+    elif text_proposals.size == 0:  # If text proposals are empty, use RPN boxes
         proposals = rpn_proposals
-    else:  # 两者都不为空，合并
+    else:  # If both are available, merge them
         proposals = np.vstack((rpn_proposals, text_proposals))
     
-    box_counts[level] = len(proposals)  # 记录当前层级保留的框数
+    box_counts[level] = len(proposals)  # Track the number of boxes at each level
     
     if len(proposals) == 0:
         return
@@ -120,7 +121,7 @@ def process_image_recursive(image, output_dir, ocr, predictor, level=1, max_leve
         sub_image = image[y1:y2, x1:x2]
         
         if sub_image is None or sub_image.shape[0] == 0 or sub_image.shape[1] == 0:
-            continue  # 跳过空图像
+            continue  # Skip empty images
         
         sub_image_path = os.path.join(output_dir, f"{i + 1}.jpg")
         save_image(sub_image, sub_image_path)
@@ -155,6 +156,8 @@ def parse_args():
     parser.add_argument('--base_image_dir', type=str, required=True, help="Base directory for input images")
     parser.add_argument('--base_output_dir', type=str, required=True, help="Base directory for output images")
     parser.add_argument('--cuda_device', type=str, default="7", help="CUDA device to use (default is 7)")
+    parser.add_argument('--message_file', type=str, required=True, help="Path to save the messages.json file")
+    parser.add_argument('--confidence_threshold', type=float, default=0.35, help="Confidence threshold for detections (default is 0.35)")
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -162,14 +165,14 @@ if __name__ == "__main__":
 
     os.environ["CUDA_VISIBLE_DEVICES"] = args.cuda_device
     
-    predictor = setup_predictor()
+    predictor = setup_predictor(args.confidence_threshold)
     ocr = setup_ocr()
     
     image_extensions = {".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tiff"}
     messages = []
     box_counts_per_image = {}
 
-    # 获取所有待处理的图像路径列表（便于 tqdm 统计总数）
+    # Get all image paths for processing (for tqdm total)
     image_tasks = []
     deepest_dirs = find_deepest_directories(args.base_image_dir)
     for dir_path in deepest_dirs:
@@ -182,12 +185,12 @@ if __name__ == "__main__":
                 if not os.path.exists(box_count_path):
                     image_tasks.append((image_path, specific_output_dir, file_name))
 
-    # 加进度条
+    # Add progress bar
     from tqdm import tqdm
     pbar = tqdm(total=len(image_tasks), desc="Processing Images")
 
     for image_path, specific_output_dir, file_name in image_tasks:
-        # 断点续跑再次检查
+        # Skip already processed images (checkpoint)
         box_count_path = os.path.join(specific_output_dir, "box_counts.json")
         if os.path.exists(box_count_path):
             pbar.update(1)
@@ -212,7 +215,7 @@ if __name__ == "__main__":
 
     pbar.close()
 
-    with open(os.path.join(args.base_output_dir, "messages.json"), "w") as f:
+    with open(args.message_file, "w") as f:
         json.dump(messages, f, indent=4)
 
     with open(os.path.join(args.base_output_dir, "box_counts.json"), "w") as f:
