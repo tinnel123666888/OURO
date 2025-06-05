@@ -6,14 +6,20 @@ import argparse
 from detectron2.engine import DefaultPredictor
 from detectron2.config import get_cfg
 from detectron2 import model_zoo
-import easyocr  
+import easyocr  # Replacing PaddleOCR
 
-def setup_predictor(confidence_threshold):
+def setup_predictor(use_cuda, confidence_threshold):
     cfg = get_cfg()
     cfg.merge_from_file(model_zoo.get_config_file("COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml"))
     cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml")
     cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = confidence_threshold  # Confidence threshold passed as argument
-    cfg.MODEL.DEVICE = "cuda"
+    
+    # Set device to cuda or cpu based on use_cuda flag
+    if use_cuda:
+        cfg.MODEL.DEVICE = "cuda"
+    else:
+        cfg.MODEL.DEVICE = "cpu"
+        
     return DefaultPredictor(cfg)
 
 def setup_ocr():
@@ -155,7 +161,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Process images using Detectron2 and OCR")
     parser.add_argument('--base_image_dir', type=str, required=True, help="Base directory for input images")
     parser.add_argument('--base_output_dir', type=str, required=True, help="Base directory for output images")
-    parser.add_argument('--cuda_device', type=str, default="7", help="CUDA device to use (default is 7)")
+    parser.add_argument('--use_cuda', action='store_true', help="Flag to enable CUDA (default is to use CPU if not set)")
     parser.add_argument('--message_file', type=str, required=True, help="Path to save the messages.json file")
     parser.add_argument('--confidence_threshold', type=float, default=0.35, help="Confidence threshold for detections (default is 0.35)")
     return parser.parse_args()
@@ -163,9 +169,9 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = args.cuda_device
+    os.environ["CUDA_VISIBLE_DEVICES"] = '0' if args.use_cuda else 'cpu'
     
-    predictor = setup_predictor(args.confidence_threshold)
+    predictor = setup_predictor(args.confidence_threshold, args.use_cuda)
     ocr = setup_ocr()
     
     image_extensions = {".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tiff"}
