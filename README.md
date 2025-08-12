@@ -1,4 +1,4 @@
-# OURO: A Self-Bootstrapped Framework for Multimodal Scene Understanding
+# [ICCV'25] OURO: A Self-Bootstrapped Framework for Multimodal Scene Understanding
 
 ## Overview
 OURO is a self-bootstrapped framework designed to enhance multimodal scene understanding by generating multi-level Region Proposal Networks (RPN) and hierarchical scene descriptions. This project provides implementations of various components, including multi-level RPN generation, captioning, visual question answering (VQA), and a training pipeline for fine-tuned multimodal models.
