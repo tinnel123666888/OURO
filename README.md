@@ -62,7 +62,7 @@ Once you have Detectron2 set up, you can run the multi-level RPN generation code
 
 ### 2. Caption and VQA Generation (TBD)
 
-The dataset for generating captions and VQA pairs, as described in the paper, has already been generated. However, due to the large size of the dataset, we are in the process of compressing it for easier handling. Once the dataset is compressed, it will be uploaded to Hugging Face for public access.
+The VQA dataset is available at https://huggingface.co/datasets/tinnel123/OURO_dataset
 
 If you wish to generate the dataset on your own, you can follow the procedure outlined below after performing multi-level RPN generation and using **Qwen2-VL** for inference. After generating the RPNs and using Qwen2-VL to perform inference, the following steps are used to generate captions and VQA pairs:
 
