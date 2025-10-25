@@ -208,9 +208,10 @@ For training your own model or fine-tuning OURO with custom datasets, we use the
 If you use this code or approach in your research, please cite our paper:
 
 ```bibtex
-@article{OURO2025,
-    title={OURO: A Self-Bootstrapped Framework for Enhancing Multimodal Scene Understanding},
-    author={},
-    journal={},
-    year={2025}
+@inproceedings{xu2025ouro,
+  title={OURO: A Self-Bootstrapped Framework for Enhancing Multimodal Scene Understanding},
+  author={Xu, Tianrun and Chen, Guanyu and Li, Ye and Xi, Yuxin and Mu, Zeyu and Wang, Ruichen and Zhang, Tianren and Gao, Haichuan and Chen, Feng},
+  booktitle={Proceedings of the IEEE/CVF International Conference on Computer Vision},
+  pages={18240--18251},
+  year={2025}
 }
