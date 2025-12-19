@@ -184,7 +184,7 @@ python recursive_merge_caption.py \
 
 
 
-### 3. checkpoint (Coming Soon)
+### 3. checkpoint
 See huggingface.
 
 ### 4. Training (LLaMA-Factory Integration)
