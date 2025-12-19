@@ -60,7 +60,7 @@ Once you have Detectron2 set up, you can run the multi-level RPN generation code
 
 --confidence_threshold: Confidence threshold for RPN object detection (default is 0.35).
 
-### 2. Caption and VQA Generation (TBD)
+### 2. Caption and VQA Generation 
 
 The VQA dataset is available at https://huggingface.co/datasets/tinnel123/OURO_dataset
 
@@ -184,8 +184,8 @@ python recursive_merge_caption.py \
 
 
 
-### 3. Web Demo (Coming Soon)
-A web-based demo showcasing OURO's capabilities is currently under development. Stay tuned for updates on its availability.
+### 3. checkpoint (Coming Soon)
+See huggingface.
 
 ### 4. Training (LLaMA-Factory Integration)
 For training your own model or fine-tuning OURO with custom datasets, we use the [LLaMA-Factory](https://github.com/hiyouga/LLaMA-Factory) repository. This tool allows you to easily create datasets and select sub-regions for training.
