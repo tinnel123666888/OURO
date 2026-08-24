@@ -43,12 +43,13 @@ Once you have Detectron2 set up, you can run the multi-level RPN generation code
    To generate multi-level RPN and associated descriptions, run the following command:
 
    ```bash
-   python process_images.py \
+   python multi_level_rpn_description_generation.py \
     --base_image_dir /path/to/your/images \
     --base_output_dir /path/to/output/images \
     --use_cuda \
     --message_file /path/to/save/messages.json \
     --confidence_threshold 0.35
+   ```
 
 --base_image_dir: Path to the root directory containing all images.
 
