@@ -12,7 +12,7 @@ def setup_predictor(use_cuda, confidence_threshold):
     cfg = get_cfg()
     cfg.merge_from_file(model_zoo.get_config_file("COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml"))
     cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml")
-    cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = confidence_threshold  # Confidence threshold passed as argument
+    cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = float(confidence_threshold)  # Confidence threshold passed as argument
     
     # Set device to cuda or cpu based on use_cuda flag
     if use_cuda:
@@ -92,11 +92,27 @@ def filter_boxes(boxes, level):
             filtered_boxes.append(box)
     return np.array(filtered_boxes)
 
-def process_image_recursive(image, output_dir, ocr, predictor, level=1, max_level=3, messages=[], image_id=1, box_counts={}):
+def process_image_recursive(image, output_dir, ocr, predictor, level=1, max_level=3, messages=None, image_id=1, box_counts=None):
+    if messages is None:
+        messages = []
+    if box_counts is None:
+        box_counts = {}
     if level > max_level or image is None or image.shape[0] == 0 or image.shape[1] == 0:
         return
     os.makedirs(output_dir, exist_ok=True)
-    
+
+    # Paper Algorithm 1: add root-image description d^(0) at level 1 before processing proposals
+    if level == 1:
+        original_path = os.path.join(output_dir, "original.jpg")
+        root_prompt = "Describe the image in detail, highlighting key elements and their relationships. Keep it under 150 words."
+        messages.append({
+            "role": "user",
+            "content": [
+                {"type": "image", "image": original_path},
+                {"type": "text", "text": root_prompt}
+            ]
+        })
+
     rpn_proposals  = generate_proposals(image, predictor)
     if level == 1:
         text_proposals = generate_text_proposals(image, ocr)
@@ -117,7 +133,7 @@ def process_image_recursive(image, output_dir, ocr, predictor, level=1, max_leve
     else:  # If both are available, merge them
         proposals = np.vstack((rpn_proposals, text_proposals))
     
-    box_counts[level] = len(proposals)  # Track the number of boxes at each level
+    box_counts[level] = box_counts.get(level, 0) + len(proposals)  # Accumulate box counts across recursive branches
     
     if len(proposals) == 0:
         return
@@ -169,9 +185,11 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = '0' if args.use_cuda else 'cpu'
+    # CUDA_VISIBLE_DEVICES must be a GPU index string ('0') or '' to hide all GPUs;
+    # 'cpu' is not a valid value and silently ignored by CUDA runtime.
+    os.environ["CUDA_VISIBLE_DEVICES"] = '0' if args.use_cuda else ''
     
-    predictor = setup_predictor(args.confidence_threshold, args.use_cuda)
+    predictor = setup_predictor(use_cuda=args.use_cuda, confidence_threshold=args.confidence_threshold)
     ocr = setup_ocr()
     
     image_extensions = {".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tiff"}
