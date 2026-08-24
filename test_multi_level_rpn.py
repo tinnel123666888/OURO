@@ -62,7 +62,7 @@ def _make_easyocr_stub():
 def _make_tqdm_stub():
     tqdm_mod = types.ModuleType("tqdm")
     class FakeTqdm:
-        def __init__(self, **kwargs): pass
+        def __init__(self, *args, **kwargs): pass
         def update(self, n=1): pass
         def close(self): pass
     tqdm_mod.tqdm = FakeTqdm
@@ -298,9 +298,9 @@ class TestBoxCountsAccumulation(unittest.TestCase):
             def fake_predict(image):
                 instances = MagicMock()
                 h = image.shape[0]
-                if h == 200:
+                if h > 100:
                     boxes = level1_boxes
-                elif h == 80:
+                elif h > 20:
                     boxes = level2_boxes
                 else:
                     boxes = empty_boxes
